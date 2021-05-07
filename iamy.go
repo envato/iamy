@@ -1,14 +1,14 @@
 package main
 
 import (
+	"fmt"
 	"io/ioutil"
 	"log"
 	"os"
-	"fmt"
 	"path/filepath"
+	"reflect"
 	"regexp"
 	"strings"
-	"reflect"
 
 	"github.com/blang/semver/v4"
 	"gopkg.in/alecthomas/kingpin.v2"
@@ -102,7 +102,7 @@ func init() {
 }
 
 func performVersionChecks() {
-	currentIAMyVersion, _ := semver.Make(strings.TrimPrefix(Version,"v"))
+	currentIAMyVersion, _ := semver.Make(strings.TrimPrefix(Version, "v"))
 	log.Printf("current versions is %s\n", currentIAMyVersion)
 
 	if _, err := os.Stat(versionFileName); !os.IsNotExist(err) {
@@ -125,7 +125,7 @@ func performVersionChecks() {
 					os.Exit(1)
 				}
 				// Pay attention to build tags as well
-				if ! reflect.DeepEqual(localDesiredVersion.Build, currentIAMyVersion.Build) {
+				if !reflect.DeepEqual(localDesiredVersion.Build, currentIAMyVersion.Build) {
 					fmt.Printf(buildVersionMismatch, currentIAMyVersion, localDesiredVersion)
 					os.Exit(1)
 				}
