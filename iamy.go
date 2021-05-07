@@ -7,6 +7,8 @@ import (
 	"fmt"
 	"path/filepath"
 	"regexp"
+	"strings"
+	"reflect"
 
 	"github.com/blang/semver/v4"
 	"gopkg.in/alecthomas/kingpin.v2"
@@ -14,6 +16,8 @@ import (
 
 const versionTooOldError = `Your version of IAMy (%s) is out of date compared to what the local
 project expects. You should upgrade to %s to use this project.`
+const buildVersionMismatch = `Your version of IAMy (%s) does not match have the build tag the
+local project expects. You should upgrade to %s to use this project.`
 
 var (
 	Version         string = "dev"
@@ -98,8 +102,8 @@ func init() {
 }
 
 func performVersionChecks() {
-	currentIAMyVersion, _ := semver.Make(Version)
-	log.Printf("current version is %s", currentIAMyVersion)
+	currentIAMyVersion, _ := semver.Make(strings.TrimPrefix(Version,"v"))
+	log.Printf("current versions is %s\n", currentIAMyVersion)
 
 	if _, err := os.Stat(versionFileName); !os.IsNotExist(err) {
 		log.Printf("%s found", versionFileName)
@@ -107,17 +111,24 @@ func performVersionChecks() {
 		fileContents := string(fileBytes)
 
 		if fileContents != "" {
-			re := regexp.MustCompile(`\d\.\d+\.\d(\+\w+)?`)
+			re := regexp.MustCompile(`\d\.\d+\.\d\+?\w*`)
 			match := re.FindStringSubmatch(fileContents)
 			localDesiredVersion, _ := semver.Make(match[0])
-			log.Printf("local project wants version %s", localDesiredVersion)
+			log.Printf("local project wants version %s\n", localDesiredVersion)
 
 			// We don't want to notify users if the `Version` is "dev" as it's not
 			// actually too old. It could be that they are running non-released
 			// versions.
-			if Version != "dev" && currentIAMyVersion.LE(localDesiredVersion) {
-				fmt.Printf(versionTooOldError, currentIAMyVersion, localDesiredVersion)
-				os.Exit(1)
+			if Version != "dev" {
+				if currentIAMyVersion.LT(localDesiredVersion) {
+					fmt.Printf(versionTooOldError, currentIAMyVersion, localDesiredVersion)
+					os.Exit(1)
+				}
+				// Pay attention to build tags as well
+				if ! reflect.DeepEqual(localDesiredVersion.Build, currentIAMyVersion.Build) {
+					fmt.Printf(buildVersionMismatch, currentIAMyVersion, localDesiredVersion)
+					os.Exit(1)
+				}
 			}
 		}
 	}
