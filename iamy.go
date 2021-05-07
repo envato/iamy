@@ -8,7 +8,7 @@ import (
 	"path/filepath"
 	"regexp"
 
-	"github.com/blang/semver"
+	"github.com/blang/semver/v4"
 	"gopkg.in/alecthomas/kingpin.v2"
 )
 
