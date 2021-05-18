@@ -12,7 +12,9 @@ import (
 )
 
 type PushCommandInput struct {
-	Dir string
+	Dir                  string
+	HeuristicCfnMatching bool
+	SkipTagged           []string
 }
 
 func PushCommand(ui Ui, input PushCommandInput) {
@@ -22,6 +24,8 @@ func PushCommand(ui Ui, input PushCommandInput) {
 	aws := iamy.AwsFetcher{
 		SkipFetchingPolicyAndRoleDescriptions: true,
 		Debug:                                 ui.Debug,
+		HeuristicCfnMatching:                  input.HeuristicCfnMatching,
+		SkipTagged:                            input.SkipTagged,
 	}
 
 	allDataFromYaml, err := yaml.Load()

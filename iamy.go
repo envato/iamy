@@ -82,7 +82,9 @@ func main() {
 	switch cmd {
 	case push.FullCommand():
 		PushCommand(ui, PushCommandInput{
-			Dir: *pushDir,
+			Dir:                  *pushDir,
+			HeuristicCfnMatching: !*lookupCfn,
+			SkipTagged:           *skipTagged,
 		})
 
 	case pull.FullCommand():
