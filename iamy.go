@@ -45,14 +45,15 @@ const cloudformationStackNameTag = "aws:cloudformation:stack-name"
 
 func main() {
 	var (
-		debug      = kingpin.Flag("debug", "Show debugging output").Bool()
-		pull       = kingpin.Command("pull", "Syncs IAM users, groups and policies from the active AWS account to files")
-		pullDir    = pull.Flag("dir", "The directory to dump yaml files to").Default(defaultDir).Short('d').String()
-		canDelete  = pull.Flag("delete", "Delete extraneous files from destination dir").Bool()
-		lookupCfn  = pull.Flag("accurate-cfn", "Fetch all known resource names from cloudformation to get exact filtering").Bool()
-		skipTagged = pull.Flag("skip-tagged", "Skips IAM entities (or buckets associated with bucket policies) tagged with a given tag").Strings()
-		push       = kingpin.Command("push", "Syncs IAM users, groups and policies from files to the active AWS account")
-		pushDir    = push.Flag("dir", "The directory to load yaml files from").Default(defaultDir).Short('d').ExistingDir()
+		debug         = kingpin.Flag("debug", "Show debugging output").Bool()
+		pull          = kingpin.Command("pull", "Syncs IAM users, groups and policies from the active AWS account to files")
+		pullDir       = pull.Flag("dir", "The directory to dump yaml files to").Default(defaultDir).Short('d').String()
+		canDelete     = pull.Flag("delete", "Delete extraneous files from destination dir").Bool()
+		lookupCfn     = pull.Flag("accurate-cfn", "Fetch all known resource names from cloudformation to get exact filtering").Bool()
+		skipCfnTagged = pull.Flag("skip-cfn-tagged", fmt.Sprintf("Shorthand for --skip-tagged %s", cloudformationStackNameTag)).Bool()
+		skipTagged    = pull.Flag("skip-tagged", "Skips IAM entities (or buckets associated with bucket policies) tagged with a given tag").Strings()
+		push          = kingpin.Command("push", "Syncs IAM users, groups and policies from files to the active AWS account")
+		pushDir       = push.Flag("dir", "The directory to load yaml files from").Default(defaultDir).Short('d').ExistingDir()
 	)
 	dryRun = kingpin.Flag("dry-run", "Show what would happen, but don't prompt to do it").Bool()
 
@@ -78,6 +79,9 @@ func main() {
 	}
 
 	performVersionChecks()
+	if *skipCfnTagged {
+		*skipTagged = append(*skipTagged, cloudformationStackNameTag)
+	}
 
 	switch cmd {
 	case push.FullCommand():
