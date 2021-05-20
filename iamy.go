@@ -8,16 +8,13 @@ import (
 	"path/filepath"
 	"reflect"
 	"regexp"
-	"strings"
 
 	"github.com/blang/semver/v4"
 	"gopkg.in/alecthomas/kingpin.v2"
 )
 
-const versionTooOldError = `Your version of IAMy (%s) is out of date compared to what the local
-project expects. You should upgrade to %s to use this project.`
-const buildVersionMismatch = `Your version of IAMy (%s) does not match have the build tag the
-local project expects. You should upgrade to %s to use this project.`
+const versionTooOldError = "Your version of IAMy (%s) is out of date compared to what the local project expects. You should upgrade to %s to use this project.\n"
+const buildVersionMismatch = "Your version of IAMy (%s) does not match the build tag (%s) the local project requires. You should upgrade to %s to use this project.\n"
 
 var (
 	Version         string = "dev"
@@ -114,8 +111,10 @@ func init() {
 }
 
 func performVersionChecks() {
-	currentIAMyVersion, _ := semver.Make(strings.TrimPrefix(Version, "v"))
-	log.Printf("current versions is %s\n", currentIAMyVersion)
+	currentIAMyVersion, _ := semver.ParseTolerant(Version)
+	// Ignore Prepatches - iamy uses them to mark builds from uncommitted trees
+	currentIAMyVersion.Pre = nil
+	log.Printf("current version is %s %d %d %d %s %s\n", currentIAMyVersion, currentIAMyVersion.Major, currentIAMyVersion.Minor,currentIAMyVersion.Patch,currentIAMyVersion.Pre, currentIAMyVersion.Build)
 
 	if _, err := os.Stat(versionFileName); !os.IsNotExist(err) {
 		log.Printf("%s found", versionFileName)
@@ -136,10 +135,12 @@ func performVersionChecks() {
 					fmt.Printf(versionTooOldError, currentIAMyVersion, localDesiredVersion)
 					os.Exit(1)
 				}
-				// Pay attention to build tags as well
-				if !reflect.DeepEqual(localDesiredVersion.Build, currentIAMyVersion.Build) {
-					fmt.Printf(buildVersionMismatch, currentIAMyVersion, localDesiredVersion)
-					os.Exit(1)
+				if len(localDesiredVersion.Build) > 0 {
+					// Pay attention to build tags as well if they are required
+					if !reflect.DeepEqual(localDesiredVersion.Build, currentIAMyVersion.Build) {
+						fmt.Printf(buildVersionMismatch, currentIAMyVersion, localDesiredVersion.Build, localDesiredVersion)
+						os.Exit(1)
+					}
 				}
 			}
 		}
