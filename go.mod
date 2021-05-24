@@ -1,4 +1,4 @@
-module github.com/99designs/iamy
+module github.com/envato/iamy
 
 go 1.14
 

@@ -7,7 +7,7 @@ import (
 	"os/exec"
 	"strings"
 
-	"github.com/99designs/iamy/iamy"
+	"github.com/envato/iamy/iamy"
 	"github.com/fatih/color"
 )
 

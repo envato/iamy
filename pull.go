@@ -3,7 +3,7 @@ package main
 import (
 	"fmt"
 
-	"github.com/99designs/iamy/iamy"
+	"github.com/envato/iamy/iamy"
 )
 
 type PullCommandInput struct {
