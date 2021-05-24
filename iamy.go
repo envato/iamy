@@ -75,21 +75,8 @@ func main() {
 		log.SetOutput(ioutil.Discard)
 	}
 
-	if Version != "dev" {
-		requiredVersion, err := fetchRequiredVersion(versionFileName)
-		if err != nil {
-			panic(err)
-		}
-		currentVersion, err := semver.ParseTolerant(Version)
-		// Ignore Prepatches - iamy uses them to mark builds from uncommitted trees
-		currentVersion.Pre = nil
-		if err != nil {
-			panic(err)
-		}
-		ok, msg := versionOk(currentVersion, requiredVersion)
-		if !ok {
-			panic(msg)
-		}
+	if err := checkVersion(); err != nil {
+		panic(err)
 	}
 
 	if *skipCfnTagged {
@@ -124,6 +111,27 @@ func init() {
 		panic(err)
 	}
 	defaultDir = filepath.Clean(dir)
+}
+
+func checkVersion() error {
+	if Version != "dev" {
+		requiredVersion, err := fetchRequiredVersion(versionFileName)
+		if err != nil {
+			return err
+		}
+		currentVersion, err := semver.ParseTolerant(Version)
+		// Ignore Prepatches - iamy uses them to mark builds from uncommitted trees
+		currentVersion.Pre = nil
+		if err != nil {
+			return err
+		}
+		ok, msg := versionOk(currentVersion, requiredVersion)
+		if !ok {
+			return msg
+		}
+	}
+
+	return nil
 }
 
 func fetchRequiredVersion(filename string) (semver.Version, error) {
