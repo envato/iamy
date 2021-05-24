@@ -75,7 +75,23 @@ func main() {
 		log.SetOutput(ioutil.Discard)
 	}
 
-	performVersionChecks()
+	if Version != "dev" {
+		requiredVersion, err := fetchRequiredVersion(versionFileName)
+		if err != nil {
+			panic(err)
+		}
+		currentVersion, err := semver.ParseTolerant(Version)
+		// Ignore Prepatches - iamy uses them to mark builds from uncommitted trees
+		currentVersion.Pre = nil
+		if err != nil {
+			panic(err)
+		}
+		ok, msg := versionOk(currentVersion, requiredVersion)
+		if !ok {
+			panic(msg)
+		}
+	}
+
 	if *skipCfnTagged {
 		*skipTagged = append(*skipTagged, cloudformationStackNameTag)
 	}
@@ -110,39 +126,32 @@ func init() {
 	defaultDir = filepath.Clean(dir)
 }
 
-func performVersionChecks() {
-	currentIAMyVersion, _ := semver.ParseTolerant(Version)
-	// Ignore Prepatches - iamy uses them to mark builds from uncommitted trees
-	currentIAMyVersion.Pre = nil
-	log.Printf("current version is %s %d %d %d %s %s\n", currentIAMyVersion, currentIAMyVersion.Major, currentIAMyVersion.Minor,currentIAMyVersion.Patch,currentIAMyVersion.Pre, currentIAMyVersion.Build)
-
+func fetchRequiredVersion(filename string) (semver.Version, error) {
 	if _, err := os.Stat(versionFileName); !os.IsNotExist(err) {
-		log.Printf("%s found", versionFileName)
-		fileBytes, _ := ioutil.ReadFile(versionFileName)
+		log.Printf("%s found", filename)
+		fileBytes, _ := ioutil.ReadFile(filename)
 		fileContents := string(fileBytes)
 
 		if fileContents != "" {
 			re := regexp.MustCompile(`\d\.\d+\.\d\+?\w*`)
 			match := re.FindStringSubmatch(fileContents)
-			localDesiredVersion, _ := semver.Make(match[0])
-			log.Printf("local project wants version %s\n", localDesiredVersion)
-
-			// We don't want to notify users if the `Version` is "dev" as it's not
-			// actually too old. It could be that they are running non-released
-			// versions.
-			if Version != "dev" {
-				if currentIAMyVersion.LT(localDesiredVersion) {
-					fmt.Printf(versionTooOldError, currentIAMyVersion, localDesiredVersion)
-					os.Exit(1)
-				}
-				if len(localDesiredVersion.Build) > 0 {
-					// Pay attention to build tags as well if they are required
-					if !reflect.DeepEqual(localDesiredVersion.Build, currentIAMyVersion.Build) {
-						fmt.Printf(buildVersionMismatch, currentIAMyVersion, localDesiredVersion.Build, localDesiredVersion)
-						os.Exit(1)
-					}
-				}
-			}
+			return semver.Make(match[0])
 		}
 	}
+	return semver.Parse("0.0.0")
+}
+
+func versionOk(current semver.Version, required semver.Version) (bool, error) {
+	if current.LT(required) {
+		_, msg := fmt.Printf(versionTooOldError, current, required)
+		return false, msg
+	}
+	if len(required.Build) > 0 {
+		// Pay attention to build tags as well if they are required
+		if !reflect.DeepEqual(required.Build, current.Build) {
+			_, msg := fmt.Printf(buildVersionMismatch, current, required.Build, required)
+			return false, msg
+		}
+	}
+	return true, nil
 }
