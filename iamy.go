@@ -6,18 +6,12 @@ import (
 	"log"
 	"os"
 	"path/filepath"
-	"reflect"
-	"regexp"
-	"strings"
 
-	"github.com/blang/semver/v4"
 	"gopkg.in/alecthomas/kingpin.v2"
 )
 
-const versionTooOldError = `Your version of IAMy (%s) is out of date compared to what the local
-project expects. You should upgrade to %s to use this project.`
-const buildVersionMismatch = `Your version of IAMy (%s) does not match have the build tag the
-local project expects. You should upgrade to %s to use this project.`
+const versionTooOldError = "Your version of IAMy (%s) is out of date compared to what the local project expects. You should upgrade to %s to use this project.\n"
+const buildVersionMismatch = "Your version of IAMy (%s) does not match the build tag (%s) the local project requires. You should upgrade to %s to use this project.\n"
 
 var (
 	Version         string = "dev"
@@ -78,7 +72,10 @@ func main() {
 		log.SetOutput(ioutil.Discard)
 	}
 
-	performVersionChecks()
+	if err := checkVersion(); err != nil {
+		panic(err)
+	}
+
 	if *skipCfnTagged {
 		*skipTagged = append(*skipTagged, cloudformationStackNameTag)
 	}
@@ -111,37 +108,4 @@ func init() {
 		panic(err)
 	}
 	defaultDir = filepath.Clean(dir)
-}
-
-func performVersionChecks() {
-	currentIAMyVersion, _ := semver.Make(strings.TrimPrefix(Version, "v"))
-	log.Printf("current versions is %s\n", currentIAMyVersion)
-
-	if _, err := os.Stat(versionFileName); !os.IsNotExist(err) {
-		log.Printf("%s found", versionFileName)
-		fileBytes, _ := ioutil.ReadFile(versionFileName)
-		fileContents := string(fileBytes)
-
-		if fileContents != "" {
-			re := regexp.MustCompile(`\d\.\d+\.\d\+?\w*`)
-			match := re.FindStringSubmatch(fileContents)
-			localDesiredVersion, _ := semver.Make(match[0])
-			log.Printf("local project wants version %s\n", localDesiredVersion)
-
-			// We don't want to notify users if the `Version` is "dev" as it's not
-			// actually too old. It could be that they are running non-released
-			// versions.
-			if Version != "dev" {
-				if currentIAMyVersion.LT(localDesiredVersion) {
-					fmt.Printf(versionTooOldError, currentIAMyVersion, localDesiredVersion)
-					os.Exit(1)
-				}
-				// Pay attention to build tags as well
-				if !reflect.DeepEqual(localDesiredVersion.Build, currentIAMyVersion.Build) {
-					fmt.Printf(buildVersionMismatch, currentIAMyVersion, localDesiredVersion)
-					os.Exit(1)
-				}
-			}
-		}
-	}
 }
