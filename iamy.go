@@ -18,6 +18,7 @@ var (
 	defaultDir      string
 	dryRun          *bool
 	versionFileName string = ".iamy-version"
+	configFileName  string = ".iamy-config"
 )
 
 type logWriter struct{ *log.Logger }
@@ -62,7 +63,16 @@ func main() {
 		Exit:   os.Exit,
 	}
 
-	cmd := kingpin.Parse()
+	args, err := kingpin.ExpandArgsFromFile(configFileName)
+	if err != nil {
+		panic(err)
+	}
+	args = append(args, os.Args...)
+
+	cmd, err := kingpin.CommandLine.Parse(args)
+	if err != nil {
+		panic(err)
+	}
 
 	if *debug {
 		ui.Debug = log.New(os.Stderr, "DEBUG ", log.LstdFlags)
