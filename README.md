@@ -11,9 +11,16 @@ This particular version has been cloned to allow Envato to rapidly develop the f
 # Upcoming features
 
 The additional features we are likely to add to this version are:
-- .iamy-version file support, [Original PR](https://github.com/99designs/iamy/pull/63)
+- .iamy-version file support, [Original PR](https://github.com/99designs/iamy/pull/63)  (done)
 - support for organizations, ous and scps
-- allow the skipping of s3 policy management
+- allow the skipping of s3 policy management (done)
+- .iamy-config file support, you can place command line flags in a file and they will be acted on as if they were passed on the command line (done)
+
+# Installation
+
+brew tap envato/envato-iamy
+brew install envato/envato-iamy/iamy
+
 
 # Development Status
 
