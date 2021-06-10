@@ -64,13 +64,13 @@ func main() {
 	}
 
 	args := os.Args[1:]
+	var configFileArgs []string
 	if _, err := os.Stat(configFileName); err == nil {
-		fileArgs, err := kingpin.ExpandArgsFromFile(configFileName)
+		configFileArgs, err = kingpin.ExpandArgsFromFile(configFileName)
 		if err != nil {
 			panic(err)
 		}
-		args = append(args, fileArgs...)
-
+		args = append(args, configFileArgs...)
 	}
 	cmd, err := kingpin.CommandLine.Parse(args)
 	if err != nil {
@@ -81,6 +81,9 @@ func main() {
 		ui.Debug = log.New(os.Stderr, "DEBUG ", log.LstdFlags)
 		log.SetFlags(0)
 		log.SetOutput(&logWriter{ui.Debug})
+		if len(configFileArgs) > 0 {
+			ui.Debug.Printf("Found flags in %s: %s", configFileName, configFileArgs)
+		}
 	} else {
 		log.SetOutput(ioutil.Discard)
 	}
