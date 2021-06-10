@@ -18,7 +18,7 @@ var (
 	defaultDir      string
 	dryRun          *bool
 	versionFileName string = ".iamy-version"
-	configFileName  string = ".iamy-config"
+	configFileName  string = ".iamy-flags"
 )
 
 type logWriter struct{ *log.Logger }
