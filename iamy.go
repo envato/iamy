@@ -63,15 +63,21 @@ func main() {
 		Exit:   os.Exit,
 	}
 
-	args, err := kingpin.ExpandArgsFromFile(configFileName)
-	if err != nil {
-		panic(err)
-	}
-	args = append(args, os.Args...)
+	var cmd string
+	if _, err := os.Stat(configFileName); err == nil {
+		args := os.Args[1:]
+		fileArgs, err := kingpin.ExpandArgsFromFile(configFileName)
+		if err != nil {
+			panic(err)
+		}
+		args = append(args, fileArgs...)
 
-	cmd, err := kingpin.CommandLine.Parse(args)
-	if err != nil {
-		panic(err)
+		cmd, err = kingpin.CommandLine.Parse(args)
+		if err != nil {
+			panic(err)
+		}
+	} else {
+		cmd = kingpin.Parse()
 	}
 
 	if *debug {
