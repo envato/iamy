@@ -18,6 +18,7 @@ var (
 	defaultDir      string
 	dryRun          *bool
 	versionFileName string = ".iamy-version"
+	configFileName  string = ".iamy-flags"
 )
 
 type logWriter struct{ *log.Logger }
@@ -41,11 +42,11 @@ func main() {
 	var (
 		debug         = kingpin.Flag("debug", "Show debugging output").Bool()
 		skipCfnTagged = kingpin.Flag("skip-cfn-tagged", fmt.Sprintf("Shorthand for --skip-tagged %s", cloudformationStackNameTag)).Bool()
+		skipTagged    = kingpin.Flag("skip-tagged", "Skips IAM entities (or buckets associated with bucket policies) tagged with a given tag").Strings()
 		pull          = kingpin.Command("pull", "Syncs IAM users, groups and policies from the active AWS account to files")
 		pullDir       = pull.Flag("dir", "The directory to dump yaml files to").Default(defaultDir).Short('d').String()
 		canDelete     = pull.Flag("delete", "Delete extraneous files from destination dir").Bool()
 		lookupCfn     = pull.Flag("accurate-cfn", "Fetch all known resource names from cloudformation to get exact filtering").Bool()
-		skipTagged    = pull.Flag("skip-tagged", "Skips IAM entities (or buckets associated with bucket policies) tagged with a given tag").Strings()
 		push          = kingpin.Command("push", "Syncs IAM users, groups and policies from files to the active AWS account")
 		pushDir       = push.Flag("dir", "The directory to load yaml files from").Default(defaultDir).Short('d').ExistingDir()
 	)
@@ -62,12 +63,27 @@ func main() {
 		Exit:   os.Exit,
 	}
 
-	cmd := kingpin.Parse()
+	args := os.Args[1:]
+	var configFileArgs []string
+	if _, err := os.Stat(configFileName); err == nil {
+		configFileArgs, err = kingpin.ExpandArgsFromFile(configFileName)
+		if err != nil {
+			panic(err)
+		}
+		args = append(args, configFileArgs...)
+	}
+	cmd, err := kingpin.CommandLine.Parse(args)
+	if err != nil {
+		panic(err)
+	}
 
 	if *debug {
 		ui.Debug = log.New(os.Stderr, "DEBUG ", log.LstdFlags)
 		log.SetFlags(0)
 		log.SetOutput(&logWriter{ui.Debug})
+		if len(configFileArgs) > 0 {
+			ui.Debug.Printf("Found flags in %s: %s", configFileName, configFileArgs)
+		}
 	} else {
 		log.SetOutput(ioutil.Discard)
 	}

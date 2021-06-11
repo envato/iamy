@@ -7,13 +7,24 @@ This allows you to use an [Infrastructure as Code](https://en.wikipedia.org/wiki
 This code was originally developed by 99designs ([origin upstream](https://github.com/99designs/iamy.git)), we recognise and appreciate the enormous effort they have put into this tool.
 This particular version has been cloned to allow Envato to rapidly develop the features that are important to our use of this tool, we are following the existing semver arrangements for the repository, but we've appended a envato build tag.
 
+# Additional features
+
+Features added to this fork include:
+- .iamy-version file support, [Original PR](https://github.com/99designs/iamy/pull/63)
+- Flags to skip resources by tag (`--skip-tagged the-tag-name` and `--skip-cfn-tagged`)
+- .iamy-flags file support for default flags. Flags are appended to command line supplied flags. Example .iamy-flags file
+  contents: `--skip-tagged=iamy-ignore`.
 
 # Upcoming features
 
-The additional features we are likely to add to this version are:
-- .iamy-version file support, [Original PR](https://github.com/99designs/iamy/pull/63)
+The additional features we are likely to add to this fork are:
 - support for organizations, ous and scps
-- allow the skipping of s3 policy management
+
+# Installation
+
+brew tap envato/envato-iamy
+brew install envato/envato-iamy/iamy
+
 
 # Development Status
 
@@ -71,10 +82,10 @@ Exec all aws commands? (y/N) y
 
 ## Accurate cloudformation matching
 
-By default, iamy will use a simple heuristic (does it end with an ID, eg -ABCDEF1234) to determine if a given resource is managed by cloudformation. 
+By default, iamy will use a simple heuristic (does it end with an ID, eg -ABCDEF1234) to determine if a given resource is managed by cloudformation.
 
 This behaviour is good enough for some cases, but if you want slower but more accurate matching pass `--accurate-cfn`
-to enumerate all cloudformation stacks and resources to determine exactly which resources are managed. 
+to enumerate all cloudformation stacks and resources to determine exactly which resources are managed.
 
 ## Inspiration and similar tools
 - https://github.com/percolate/iamer
