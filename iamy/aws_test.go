@@ -7,6 +7,7 @@ import (
 )
 
 const cloudformationStackNameTag = "aws:cloudformation:stack-name"
+const includeTestTag = "iamy-include"
 
 func TestIsSkippableManagedResource(t *testing.T) {
 	skippables := []string{
@@ -21,7 +22,7 @@ func TestIsSkippableManagedResource(t *testing.T) {
 		"myalias-123/iam/instance-profile/example.yaml",
 	}
 
-	f := AwsFetcher{cfn: &cfnClient{}}
+	f := AwsFetcher{cfn: &cfnClient{}, SkipTagged: []string{cloudformationStackNameTag}, IncludeTagged: []string{includeTestTag}}
 
 	for _, name := range skippables {
 		t.Run(name, func(t *testing.T) {
@@ -53,7 +54,7 @@ func TestIsSkippableManagedResource(t *testing.T) {
 }
 
 func TestSkippableS3TaggedResources(t *testing.T) {
-	f := AwsFetcher{cfn: &cfnClient{}, SkipTagged: []string{cloudformationStackNameTag}}
+	f := AwsFetcher{cfn: &cfnClient{}, SkipTagged: []string{cloudformationStackNameTag}, IncludeTagged: []string{includeTestTag}}
 	skippableTags := map[string]string{cloudformationStackNameTag: "my-stack"}
 
 	skipped, err := f.isSkippableManagedResource(CfnS3Bucket, "my-bucket", skippableTags)
@@ -66,7 +67,7 @@ func TestSkippableS3TaggedResources(t *testing.T) {
 }
 
 func TestSkippableS3TaggedResources_WithNoSkipTags(t *testing.T) {
-	f := AwsFetcher{cfn: &cfnClient{}, SkipTagged: []string{}}
+	f := AwsFetcher{cfn: &cfnClient{}, SkipTagged: []string{}, IncludeTagged: []string{includeTestTag}}
 	skippableTags := map[string]string{cloudformationStackNameTag: "my-stack"}
 
 	skipped, err := f.isSkippableManagedResource(CfnS3Bucket, "my-bucket", skippableTags)
@@ -79,7 +80,7 @@ func TestSkippableS3TaggedResources_WithNoSkipTags(t *testing.T) {
 }
 
 func TestNonSkippableTaggedResources(t *testing.T) {
-	f := AwsFetcher{cfn: &cfnClient{}, SkipTagged: []string{cloudformationStackNameTag}}
+	f := AwsFetcher{cfn: &cfnClient{}, SkipTagged: []string{cloudformationStackNameTag}, IncludeTagged: []string{includeTestTag}}
 	nonSkippableTags := map[string]string{"Name": "blah"}
 
 	skipped, err := f.isSkippableManagedResource(CfnS3Bucket, "my-bucket", nonSkippableTags)
@@ -91,8 +92,29 @@ func TestNonSkippableTaggedResources(t *testing.T) {
 	}
 }
 
+func TestIncludeTagsOverrideSkip(t *testing.T) {
+	f := AwsFetcher{cfn: &cfnClient{}, SkipTagged: []string{cloudformationStackNameTag}, IncludeTagged: []string{includeTestTag}}
+	TestTags := map[string]string{includeTestTag: "true"}
+
+	skipped, err := f.isSkippableManagedResource(CfnS3Bucket, "my-bucket", TestTags)
+	if err != "" {
+		t.Errorf("expected no error message but got: %s", err)
+	}
+	if skipped == true {
+		t.Errorf("expected resource to not be skipped but got true")
+	}
+
+	skipped, err = f.isSkippableManagedResource(CfnS3Bucket, "cfn-bucket-ABCDEF123456", TestTags)
+	if err != "" {
+		t.Errorf("expected no error message but got: %s", err)
+	}
+	if skipped == true {
+		t.Errorf("expected resource to not be skipped but got true")
+	}
+}
+
 func TestSkippableIAMUserResource(t *testing.T) {
-	f := AwsFetcher{cfn: &cfnClient{}, SkipTagged: []string{cloudformationStackNameTag}}
+	f := AwsFetcher{cfn: &cfnClient{}, SkipTagged: []string{cloudformationStackNameTag}, IncludeTagged: []string{includeTestTag}}
 	key := cloudformationStackNameTag
 	val := "my-stack"
 	userName := "my-user"
@@ -111,7 +133,7 @@ func TestSkippableIAMUserResource(t *testing.T) {
 }
 
 func TestSkippableIAMUserResource_WithNoSkipTags(t *testing.T) {
-	f := AwsFetcher{cfn: &cfnClient{}, SkipTagged: []string{}}
+	f := AwsFetcher{cfn: &cfnClient{}, SkipTagged: []string{}, IncludeTagged: []string{includeTestTag}}
 	key := cloudformationStackNameTag
 	val := "my-stack"
 	userName := "my-user"
@@ -135,7 +157,7 @@ func TestSkippableIAMUserResource_WithNoSkipTags(t *testing.T) {
 }
 
 func TestSkippableIAMRoleResource(t *testing.T) {
-	f := AwsFetcher{cfn: &cfnClient{}, SkipTagged: []string{cloudformationStackNameTag}}
+	f := AwsFetcher{cfn: &cfnClient{}, SkipTagged: []string{cloudformationStackNameTag}, IncludeTagged: []string{includeTestTag}}
 	key := cloudformationStackNameTag
 	val := "my-stack"
 	roleName := "my-role"
@@ -154,7 +176,7 @@ func TestSkippableIAMRoleResource(t *testing.T) {
 }
 
 func TestSkippableIAMRoleResource_WithNoSkipTags(t *testing.T) {
-	f := AwsFetcher{cfn: &cfnClient{}, SkipTagged: []string{}, SkipFetchingPolicyAndRoleDescriptions: true}
+	f := AwsFetcher{cfn: &cfnClient{}, SkipTagged: []string{}, IncludeTagged: []string{includeTestTag}, SkipFetchingPolicyAndRoleDescriptions: true}
 	key := cloudformationStackNameTag
 	val := "my-stack"
 	roleName := "my-role"
