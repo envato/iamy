@@ -1,10 +1,10 @@
 package iamy
 
 import (
+	"regexp"
 	"strings"
 	"time"
 
-	"github.com/h2so5/goback/regexp"
 	"github.com/aws/aws-sdk-go/aws/awserr"
 
 	"github.com/aws/aws-sdk-go/aws"
@@ -13,7 +13,7 @@ import (
 	"github.com/aws/aws-sdk-go/service/cloudformation/cloudformationiface"
 )
 
-var cfnResourceRegexp = regexp.MustCompile(`^(?=.{10,20})(?=.*[A-Z])(?=.*[0-9A-Z]).*$`)
+var cfnResourceRegexp = regexp.MustCompile(`-[A-Z0-9]{10,20}$`)
 
 type CfnResourceType string
 
