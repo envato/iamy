@@ -24,6 +24,7 @@ const (
 	CfnIamGroup        = "AWS::IAM::Group"
 	CfnInstanceProfile = "AWS::IAM::InstanceProfile"
 	CfnS3Bucket        = "AWS::S3::Bucket"
+	UpperCaseLetters   = "ABCDEFGHIJKLMNOPQRSTUVWXYZ"
 )
 
 type cfnClient struct {
@@ -134,8 +135,10 @@ func (c *cfnClient) IsManagedResource(cfnType CfnResourceType, resourceIdentifie
 	if c.managedResources != nil {
 		return c.managedResources[resourceIdentifier].contains(cfnType)
 	}
+	parts := strings.Split(resourceIdentifier, "-")
+	cfnIdentifier := parts[len(parts)-1]
 
-	if cfnResourceRegexp.MatchString(resourceIdentifier) {
+	if cfnResourceRegexp.MatchString(resourceIdentifier) && strings.ContainsAny(cfnIdentifier, UpperCaseLetters) {
 		return true
 	}
 

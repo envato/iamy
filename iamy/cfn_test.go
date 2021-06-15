@@ -30,5 +30,17 @@ func TestCfnMangedResources(t *testing.T) {
 		if !cfn.IsManagedResource(CfnIamPolicy, "foobar-ABCDEFGH1234567") {
 			t.Fatal("names with id suffix are managed")
 		}
+
+		if cfn.IsManagedResource(CfnIamPolicy, "foobar-abcdefgh1234567") {
+			t.Fatal("names with suffix containing only lowercase letters are not managed")
+		}
+
+		if cfn.IsManagedResource(CfnIamPolicy, "elasticbeanstalk-us-east-1-298865909318") {
+			t.Fatal("names ending with account numbers are managed")
+		}
+
+		if cfn.IsManagedResource(CfnIamPolicy, "Elasticbeanstalk-us-East-1-298865909318") {
+			t.Fatal("names ending with account numbers are managed, even if the name contains uppercase letters")
+		}
 	})
 }
