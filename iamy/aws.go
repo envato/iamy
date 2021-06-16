@@ -18,6 +18,7 @@ type AwsFetcher struct {
 	SkipFetchingPolicyAndRoleDescriptions bool
 	HeuristicCfnMatching                  bool
 	SkipTagged                            []string
+	IncludeTagged                         []string
 
 	Debug *log.Logger
 
@@ -413,6 +414,14 @@ func (a *AwsFetcher) getAccount() (*Account, error) {
 // reasoning why it was skipped.
 
 func (a *AwsFetcher) isSkippableManagedResource(cfnType CfnResourceType, resourceIdentifier string, tags map[string]string) (bool, string) {
+	if len(a.IncludeTagged) > 0 {
+		for _, tag := range a.IncludeTagged {
+			if _, ok := tags[tag]; ok {
+				return false, ""
+			}
+		}
+	}
+
 	if len(a.SkipTagged) > 0 {
 		for _, tag := range a.SkipTagged {
 			if stackName, ok := tags[tag]; ok {
