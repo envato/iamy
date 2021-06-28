@@ -1,0 +1,12 @@
+# comments must be stripped
+Policy:
+  Statement:
+    - Sid: ExampleStatement
+      Action:
+        - ec2:TerminateInstances
+        - ec2:StopInstances
+        - 'iam:*'
+      Effect: Allow
+      Resource:
+        - '*'
+  Version: 2012-10-17
