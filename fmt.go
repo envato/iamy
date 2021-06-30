@@ -2,14 +2,14 @@ package main
 
 import "github.com/envato/iamy/iamy"
 
-type NormalizeCommandInput struct {
+type FormatCommandInput struct {
 	Dir       string
 	CanDelete bool
 }
 
-func NormalizeCommand(ui Ui, input NormalizeCommandInput) {
+func FormatCommand(ui Ui, input FormatCommandInput) {
 	if *dryRun {
-		ui.Fatal("Dry-run mode not supported for normalize")
+		ui.Fatal("Dry-run mode not supported for fmt")
 	}
 
 	yaml := iamy.YamlLoadDumper{
@@ -23,7 +23,7 @@ func NormalizeCommand(ui Ui, input NormalizeCommandInput) {
 	}
 
 	for _, account := range allDataFromYaml {
-		ui.Printf("Normalizing %s (%s)", account.Account.Alias, account.Account.Id)
+		ui.Printf("Formatting %s (%s)", account.Account.Alias, account.Account.Id)
 
 		err = yaml.Dump(&account, input.CanDelete)
 		if err != nil {

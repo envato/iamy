@@ -41,7 +41,7 @@ func TestMain(m *testing.M) {
 
 func setup() error {
 	dryRun = &isDryRun
-	tempDir, err := os.MkdirTemp("", "iamy-test-normalize")
+	tempDir, err := os.MkdirTemp("", "iamy-test-fmt")
 	if err != nil {
 		return err
 	}
@@ -53,7 +53,7 @@ func setup() error {
 		return err
 	}
 
-	data, err := os.ReadFile("fixtures/resources/iam-policy-before-normalization.yaml")
+	data, err := os.ReadFile("fixtures/resources/iam-policy-before-fmt.yaml")
 	if err != nil {
 		return err
 	}
@@ -78,17 +78,17 @@ func teardown() error {
 }
 
 func TestNormalization(t *testing.T) {
-	expected, err := os.ReadFile("fixtures/resources/iam-policy-after-normalization.yaml")
+	expected, err := os.ReadFile("fixtures/resources/iam-policy-after-fmt.yaml")
 	if err != nil {
 		t.Fatal(err)
 	}
 
-	input := NormalizeCommandInput{
+	input := FormatCommandInput{
 		Dir:       testDir,
 		CanDelete: true,
 	}
 
-	NormalizeCommand(mockUi(t), input)
+	FormatCommand(mockUi(t), input)
 
 	actual, err := os.ReadFile(filepath.Join(testDir, accountAlias, "iam", "policy", "TestPolicy.yaml"))
 	if err != nil {
