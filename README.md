@@ -22,9 +22,10 @@ The additional features we are likely to add to this fork are:
 
 # Installation
 
+```
 brew tap envato/envato-iamy
 brew install envato/envato-iamy/iamy
-
+```
 
 # Development Status
 
