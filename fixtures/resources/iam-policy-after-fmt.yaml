@@ -1,0 +1,10 @@
+Policy:
+  Statement:
+  - Action:
+    - ec2:StopInstances
+    - ec2:TerminateInstances
+    - iam:*
+    Effect: Allow
+    Resource: '*'
+    Sid: ExampleStatement
+  Version: "2012-10-17"

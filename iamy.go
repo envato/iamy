@@ -40,16 +40,19 @@ const cloudformationStackNameTag = "aws:cloudformation:stack-name"
 
 func main() {
 	var (
-		debug         = kingpin.Flag("debug", "Show debugging output").Bool()
-		skipCfnTagged = kingpin.Flag("skip-cfn-tagged", fmt.Sprintf("Shorthand for --skip-tagged %s", cloudformationStackNameTag)).Bool()
-		skipTagged    = kingpin.Flag("skip-tagged", "Skips IAM entities (or buckets associated with bucket policies) tagged with a given tag").Strings()
-		includeTagged = kingpin.Flag("include-tagged", "Includes IAM entities (or buckets associated with bucket policies) tagged with a given tag").Strings()
-		pull          = kingpin.Command("pull", "Syncs IAM users, groups and policies from the active AWS account to files")
-		pullDir       = pull.Flag("dir", "The directory to dump yaml files to").Default(defaultDir).Short('d').String()
-		canDelete     = pull.Flag("delete", "Delete extraneous files from destination dir").Bool()
-		lookupCfn     = pull.Flag("accurate-cfn", "Fetch all known resource names from cloudformation to get exact filtering").Bool()
-		push          = kingpin.Command("push", "Syncs IAM users, groups and policies from files to the active AWS account")
-		pushDir       = push.Flag("dir", "The directory to load yaml files from").Default(defaultDir).Short('d').ExistingDir()
+		debug           = kingpin.Flag("debug", "Show debugging output").Bool()
+		skipCfnTagged   = kingpin.Flag("skip-cfn-tagged", fmt.Sprintf("Shorthand for --skip-tagged %s", cloudformationStackNameTag)).Bool()
+		skipTagged      = kingpin.Flag("skip-tagged", "Skips IAM entities (or buckets associated with bucket policies) tagged with a given tag").Strings()
+		includeTagged   = kingpin.Flag("include-tagged", "Includes IAM entities (or buckets associated with bucket policies) tagged with a given tag").Strings()
+		pull            = kingpin.Command("pull", "Syncs IAM users, groups and policies from the active AWS account to files")
+		pullDir         = pull.Flag("dir", "The directory to dump yaml files to").Default(defaultDir).Short('d').String()
+		pullCanDelete   = pull.Flag("delete", "Delete extraneous files from destination dir").Bool()
+		lookupCfn       = pull.Flag("accurate-cfn", "Fetch all known resource names from cloudformation to get exact filtering").Bool()
+		push            = kingpin.Command("push", "Syncs IAM users, groups and policies from files to the active AWS account")
+		pushDir         = push.Flag("dir", "The directory to load yaml files from").Default(defaultDir).Short('d').ExistingDir()
+		format          = kingpin.Command("fmt", "Update YAML files to match expected format")
+		formatDir       = format.Flag("dir", "The base directory to format").Default(defaultDir).Short('d').ExistingDir()
+		formatCanDelete = format.Flag("delete", "Delete extraneous files from destination dir").Bool()
 	)
 	dryRun = kingpin.Flag("dry-run", "Show what would happen, but don't prompt to do it").Bool()
 
@@ -109,10 +112,16 @@ func main() {
 	case pull.FullCommand():
 		PullCommand(ui, PullCommandInput{
 			Dir:                  *pullDir,
-			CanDelete:            *canDelete,
+			CanDelete:            *pullCanDelete,
 			HeuristicCfnMatching: !*lookupCfn,
 			SkipTagged:           *skipTagged,
 			IncludeTagged:        *includeTagged,
+		})
+
+	case format.FullCommand():
+		FormatCommand(ui, FormatCommandInput{
+			Dir:       *formatDir,
+			CanDelete: *formatCanDelete,
 		})
 	}
 }
