@@ -14,6 +14,7 @@ Features added to this fork include:
 - Flags to skip resources by tag (`--skip-tagged the-tag-name` and `--skip-cfn-tagged`)
 - .iamy-flags file support for default flags. Flags are appended to command line supplied flags. Example .iamy-flags file
   contents: `--skip-tagged=iamy-ignore`.
+- `iamy fmt`, which formats files to match the result of `iamy pull`
 
 # Upcoming features
 
@@ -33,7 +34,7 @@ Under active development, pull requests welcome.  Open issues for discussions pl
 
 ## How it works
 
-IAMy has two subcommands.
+IAMy has two main subcommands.
 
 `pull` will sync IAM users, groups and policies from AWS to YAML files
 
@@ -41,6 +42,9 @@ IAMy has two subcommands.
 
 For the `push` command, IAMy will output an execution plan as a series of [`aws` cli](https://aws.amazon.com/cli/) commands which can be optionally executed. This turns out to be a very direct and understandable way to display the changes to be made, and means you can pick and choose exactly what commands get actioned.
 
+### Other features
+
+- `fmt` will reformat all relevant files to match the output of `iamy pull`. This is particularly useful for using IAMy for drift detection, as you can use it as a PR check, and/or reformat files before performing a diff.
 
 ## Getting started
 
