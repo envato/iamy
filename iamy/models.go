@@ -112,6 +112,7 @@ type Role struct {
 	AssumeRolePolicyDocument *PolicyDocument `json:"AssumeRolePolicyDocument"`
 	InlinePolicies           []InlinePolicy  `json:"InlinePolicies,omitempty"`
 	Policies                 []string        `json:"Policies,omitempty"`
+	MaxSessionDuration       int             `json:"MaxSessionDuration,omitempty"`
 }
 
 type InstanceProfile struct {

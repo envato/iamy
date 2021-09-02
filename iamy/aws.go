@@ -195,14 +195,18 @@ func (a *AwsFetcher) marshalPolicyDescriptionAsync(policyArn string, target *str
 	}()
 }
 
-func (a *AwsFetcher) marshalRoleDescriptionAsync(roleName string, target *string) {
+func (a *AwsFetcher) marshalRoleAsync(roleName string, roleDescription *string, roleMaxSessionDuration *int) {
 	a.descriptionFetchWaitGroup.Add(1)
 	go func() {
 		defer a.descriptionFetchWaitGroup.Done()
 		log.Println("Fetching role description for", roleName)
 
 		var err error
-		*target, err = a.iam.getRoleDescription(roleName)
+		var sessionDuration int
+		*roleDescription, sessionDuration, err = a.iam.getRole(roleName)
+		if sessionDuration > 0 {
+			*roleMaxSessionDuration = sessionDuration
+		}
 		if err != nil {
 			a.descriptionFetchError = err
 		}
@@ -300,7 +304,7 @@ func (a *AwsFetcher) populateIamData(resp *iam.GetAccountAuthorizationDetailsOut
 		}}
 
 		if !a.SkipFetchingPolicyAndRoleDescriptions {
-			a.marshalRoleDescriptionAsync(*roleResp.RoleName, &role.Description)
+			a.marshalRoleAsync(*roleResp.RoleName, &role.Description, &role.MaxSessionDuration)
 		}
 
 		var err error

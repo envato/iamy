@@ -25,12 +25,17 @@ func (c *iamClient) getPolicyDescription(arn string) (string, error) {
 	return "", err
 }
 
-func (c *iamClient) getRoleDescription(name string) (string, error) {
+func (c *iamClient) getRole(name string) (string, int, error) {
 	resp, err := c.GetRole(&iam.GetRoleInput{RoleName: &name})
-	if err == nil && resp.Role != nil && resp.Role.Description != nil {
-		return *resp.Role.Description, nil
+	var sessionDuration int64
+	var description string
+	if resp.Role.MaxSessionDuration != nil {
+		sessionDuration = *resp.Role.MaxSessionDuration
 	}
-	return "", err
+	if resp.Role.Description != nil {
+		description = *resp.Role.Description
+	}
+	return description, int(sessionDuration), err
 }
 
 func (c *iamClient) MustGetSecurityCredsForUser(username string) (accessKeyIds, mfaIds []string, hasLoginProfile bool) {
