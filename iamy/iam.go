@@ -29,9 +29,11 @@ func (c *iamClient) getRole(name string) (string, int, error) {
 	resp, err := c.GetRole(&iam.GetRoleInput{RoleName: &name})
 	var sessionDuration int64
 	var description string
-	if resp.Role.MaxSessionDuration != nil {
+	// 3600 is the default, so let's ignore it
+	if resp.Role.MaxSessionDuration != nil && *resp.Role.MaxSessionDuration != 3600 {
 		sessionDuration = *resp.Role.MaxSessionDuration
 	}
+
 	if resp.Role.Description != nil {
 		description = *resp.Role.Description
 	}
