@@ -15,6 +15,7 @@ Features added to this fork include:
 - .iamy-flags file support for default flags. Flags are appended to command line supplied flags. Example .iamy-flags file
   contents: `--skip-tagged=iamy-ignore`.
 - `iamy fmt`, which formats files to match the result of `iamy pull`
+- Add support for specifying [MaxSessionDuration](https://aws.amazon.com/about-aws/whats-new/2018/03/longer-role-sessions/) on a role
 
 # Upcoming features
 

@@ -3,6 +3,7 @@ package iamy
 import (
 	"fmt"
 	"reflect"
+	"strconv"
 	"strings"
 )
 
@@ -282,6 +283,13 @@ func (a *awsSyncCmdGenerator) updateRoles() {
 					"--policy-arn", a.to.Account.policyArnFromString(p))
 			}
 
+			// update max session duration
+			if fromRole.MaxSessionDuration != toRole.MaxSessionDuration {
+				a.cmds.Add("aws", "iam", "update-role",
+					"--role-name", toRole.Name,
+					"--max-session-duration", strconv.Itoa(toRole.MaxSessionDuration))
+			}
+
 		} else {
 			// Create role
 			args := []string{
@@ -292,6 +300,9 @@ func (a *awsSyncCmdGenerator) updateRoles() {
 			}
 			if toRole.Description != "" {
 				args = append(args, "--description", toRole.Description)
+			}
+			if toRole.MaxSessionDuration != 0 {
+				args = append(args, "--max-session-duration", strconv.Itoa(toRole.MaxSessionDuration))
 			}
 			a.cmds.Add("aws", args...)
 
