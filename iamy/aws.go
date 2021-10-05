@@ -19,6 +19,7 @@ type AwsFetcher struct {
 	HeuristicCfnMatching                  bool
 	SkipTagged                            []string
 	IncludeTagged                         []string
+	SkipPaths                             []string
 
 	Debug *log.Logger
 
@@ -101,7 +102,7 @@ func (a *AwsFetcher) fetchS3Data() error {
 		if b.policyJson == "" {
 			continue
 		}
-		if ok, err := a.isSkippableManagedResource(CfnS3Bucket, b.name, b.tags); ok {
+		if ok, err := a.isSkippableManagedResource(CfnS3Bucket, b.name, b.tags, "__DONTSKIPS3__"); ok {
 			log.Printf(err)
 			continue
 		}
@@ -215,7 +216,7 @@ func (a *AwsFetcher) marshalRoleAsync(roleName string, roleDescription *string, 
 
 func (a *AwsFetcher) populateInstanceProfileData(resp *iam.ListInstanceProfilesOutput) error {
 	for _, profileResp := range resp.InstanceProfiles {
-		if ok, err := a.isSkippableManagedResource(CfnInstanceProfile, *profileResp.InstanceProfileName, map[string]string{}); ok {
+		if ok, err := a.isSkippableManagedResource(CfnInstanceProfile, *profileResp.InstanceProfileName, map[string]string{}, *profileResp.Path); ok {
 			log.Printf(err)
 			continue
 		}
@@ -240,7 +241,7 @@ func (a *AwsFetcher) populateIamData(resp *iam.GetAccountAuthorizationDetailsOut
 			tags[*tag.Key] = *tag.Value
 		}
 
-		if ok, err := a.isSkippableManagedResource(CfnIamUser, *userResp.UserName, tags); ok {
+		if ok, err := a.isSkippableManagedResource(CfnIamUser, *userResp.UserName, tags, *userResp.Path); ok {
 			log.Printf(err)
 			continue
 		}
@@ -267,7 +268,7 @@ func (a *AwsFetcher) populateIamData(resp *iam.GetAccountAuthorizationDetailsOut
 	}
 
 	for _, groupResp := range resp.GroupDetailList {
-		if ok, err := a.isSkippableManagedResource(CfnIamGroup, *groupResp.GroupName, map[string]string{}); ok {
+		if ok, err := a.isSkippableManagedResource(CfnIamGroup, *groupResp.GroupName, map[string]string{}, *groupResp.Path); ok {
 			log.Printf(err)
 			continue
 		}
@@ -293,7 +294,7 @@ func (a *AwsFetcher) populateIamData(resp *iam.GetAccountAuthorizationDetailsOut
 			tags[*tag.Key] = *tag.Value
 		}
 
-		if ok, err := a.isSkippableManagedResource(CfnIamRole, *roleResp.RoleName, tags); ok {
+		if ok, err := a.isSkippableManagedResource(CfnIamRole, *roleResp.RoleName, tags, *roleResp.Path); ok {
 			log.Printf(err)
 			continue
 		}
@@ -323,7 +324,7 @@ func (a *AwsFetcher) populateIamData(resp *iam.GetAccountAuthorizationDetailsOut
 	}
 
 	for _, policyResp := range resp.Policies {
-		if ok, err := a.isSkippableManagedResource(CfnIamPolicy, *policyResp.PolicyName, map[string]string{}); ok {
+		if ok, err := a.isSkippableManagedResource(CfnIamPolicy, *policyResp.PolicyName, map[string]string{}, *policyResp.Path); ok {
 			log.Printf(err)
 			continue
 		}
@@ -417,7 +418,7 @@ func (a *AwsFetcher) getAccount() (*Account, error) {
 // Returns a boolean of whether it can be skipped and a string of the
 // reasoning why it was skipped.
 
-func (a *AwsFetcher) isSkippableManagedResource(cfnType CfnResourceType, resourceIdentifier string, tags map[string]string) (bool, string) {
+func (a *AwsFetcher) isSkippableManagedResource(cfnType CfnResourceType, resourceIdentifier string, tags map[string]string, resourcePath string) (bool, string) {
 	if len(a.IncludeTagged) > 0 {
 		for _, tag := range a.IncludeTagged {
 			if _, ok := tags[tag]; ok {
@@ -430,6 +431,14 @@ func (a *AwsFetcher) isSkippableManagedResource(cfnType CfnResourceType, resourc
 		for _, tag := range a.SkipTagged {
 			if stackName, ok := tags[tag]; ok {
 				return true, fmt.Sprintf("Skipping resource %s tagged with %s in stack %s", resourceIdentifier, tag, stackName)
+			}
+		}
+	}
+
+        if len(a.SkipPaths) > 0 {
+		for _, path := range a.SkipPaths {
+			if strings.HasPrefix(resourcePath, path) {
+				return true, fmt.Sprintf("Skipping resource %s with path %s matches %s", resourceIdentifier, resourcePath, path)
 			}
 		}
 	}

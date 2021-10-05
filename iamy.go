@@ -44,6 +44,7 @@ func main() {
 		skipCfnTagged   = kingpin.Flag("skip-cfn-tagged", fmt.Sprintf("Shorthand for --skip-tagged %s", cloudformationStackNameTag)).Bool()
 		skipTagged      = kingpin.Flag("skip-tagged", "Skips IAM entities (or buckets associated with bucket policies) tagged with a given tag").Strings()
 		includeTagged   = kingpin.Flag("include-tagged", "Includes IAM entities (or buckets associated with bucket policies) tagged with a given tag").Strings()
+		skipPaths       = kingpin.Flag("skip-path", fmt.Sprintf("Skips IAM entities that have a path starting with the supplied prefixes, repeat flag for multiple prefixes")).Strings()
 		pull            = kingpin.Command("pull", "Syncs IAM users, groups and policies from the active AWS account to files")
 		pullDir         = pull.Flag("dir", "The directory to dump yaml files to").Default(defaultDir).Short('d').String()
 		pullCanDelete   = pull.Flag("delete", "Delete extraneous files from destination dir").Bool()
@@ -107,6 +108,7 @@ func main() {
 			HeuristicCfnMatching: !*lookupCfn,
 			SkipTagged:           *skipTagged,
 			IncludeTagged:        *includeTagged,
+			SkipPaths:            *skipPaths,
 		})
 
 	case pull.FullCommand():
@@ -116,6 +118,7 @@ func main() {
 			HeuristicCfnMatching: !*lookupCfn,
 			SkipTagged:           *skipTagged,
 			IncludeTagged:        *includeTagged,
+			SkipPaths:            *skipPaths,
 		})
 
 	case format.FullCommand():
