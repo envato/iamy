@@ -28,7 +28,7 @@ func TestIsSkippableManagedResource(t *testing.T) {
 	for _, name := range skippables {
 		t.Run(name, func(t *testing.T) {
 
-			skipped, err := f.isSkippableManagedResource(CfnIamRole, name, map[string]string{},"/")
+			skipped, err := f.isSkippableManagedResource(CfnIamRole, name, map[string]string{}, "/")
 			if skipped == false {
 				t.Errorf("expected %s to be skipped but got false", name)
 			}
@@ -42,7 +42,7 @@ func TestIsSkippableManagedResource(t *testing.T) {
 	for _, name := range nonSkippables {
 		t.Run(name, func(t *testing.T) {
 
-			skipped, err := f.isSkippableManagedResource(CfnIamRole, name, map[string]string{},"/")
+			skipped, err := f.isSkippableManagedResource(CfnIamRole, name, map[string]string{}, "/")
 			if skipped == true {
 				t.Errorf("expected %s to not be skipped but got true", name)
 			}
@@ -55,7 +55,7 @@ func TestIsSkippableManagedResource(t *testing.T) {
 	for _, name := range nonSkippables {
 		t.Run(name, func(t *testing.T) {
 
-			skipped, err := f.isSkippableManagedResource(CfnIamRole, name, map[string]string{},testSkipPath)
+			skipped, err := f.isSkippableManagedResource(CfnIamRole, name, map[string]string{}, testSkipPath)
 			if skipped == false {
 				t.Errorf("expected %s to be skipped due to path but got false", name)
 			}

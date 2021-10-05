@@ -435,7 +435,7 @@ func (a *AwsFetcher) isSkippableManagedResource(cfnType CfnResourceType, resourc
 		}
 	}
 
-        if len(a.SkipPaths) > 0 {
+	if len(a.SkipPaths) > 0 {
 		for _, path := range a.SkipPaths {
 			if strings.HasPrefix(resourcePath, path) {
 				return true, fmt.Sprintf("Skipping resource %s with path %s matches %s", resourceIdentifier, resourcePath, path)
