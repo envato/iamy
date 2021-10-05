@@ -12,7 +12,7 @@ type PullCommandInput struct {
 	HeuristicCfnMatching bool
 	SkipTagged           []string
 	IncludeTagged        []string
-	SkipPaths            []string
+	SkipPathPrefixes     []string
 }
 
 func PullCommand(ui Ui, input PullCommandInput) {
@@ -21,7 +21,7 @@ func PullCommand(ui Ui, input PullCommandInput) {
 		HeuristicCfnMatching: input.HeuristicCfnMatching,
 		SkipTagged:           input.SkipTagged,
 		IncludeTagged:        input.IncludeTagged,
-		SkipPaths:            input.SkipPaths,
+		SkipPathPrefixes:     input.SkipPathPrefixes,
 	}
 	data, err := aws.Fetch()
 	if err != nil {

@@ -19,7 +19,7 @@ type AwsFetcher struct {
 	HeuristicCfnMatching                  bool
 	SkipTagged                            []string
 	IncludeTagged                         []string
-	SkipPaths                             []string
+	SkipPathPrefixes                      []string
 
 	Debug *log.Logger
 
@@ -435,8 +435,8 @@ func (a *AwsFetcher) isSkippableManagedResource(cfnType CfnResourceType, resourc
 		}
 	}
 
-	if len(a.SkipPaths) > 0 {
-		for _, path := range a.SkipPaths {
+	if len(a.SkipPathPrefixes) > 0 {
+		for _, path := range a.SkipPathPrefixes {
 			if strings.HasPrefix(resourcePath, path) {
 				return true, fmt.Sprintf("Skipping resource %s with path %s matches %s", resourceIdentifier, resourcePath, path)
 			}
