@@ -427,19 +427,15 @@ func (a *AwsFetcher) isSkippableManagedResource(cfnType CfnResourceType, resourc
 		}
 	}
 
-	if len(a.SkipTagged) > 0 {
-		for _, tag := range a.SkipTagged {
-			if stackName, ok := tags[tag]; ok {
-				return true, fmt.Sprintf("Skipping resource %s tagged with %s in stack %s", resourceIdentifier, tag, stackName)
-			}
+	for _, tag := range a.SkipTagged {
+		if stackName, ok := tags[tag]; ok {
+			return true, fmt.Sprintf("Skipping resource %s tagged with %s in stack %s", resourceIdentifier, tag, stackName)
 		}
 	}
 
-	if len(a.SkipPathPrefixes) > 0 {
-		for _, path := range a.SkipPathPrefixes {
-			if strings.HasPrefix(resourcePath, path) {
-				return true, fmt.Sprintf("Skipping resource %s with path %s matches %s", resourceIdentifier, resourcePath, path)
-			}
+	for _, path := range a.SkipPathPrefixes {
+		if strings.HasPrefix(resourcePath, path) {
+			return true, fmt.Sprintf("Skipping resource %s with path %s matches %s", resourceIdentifier, resourcePath, path)
 		}
 	}
 
