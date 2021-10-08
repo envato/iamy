@@ -16,6 +16,7 @@ type PushCommandInput struct {
 	HeuristicCfnMatching bool
 	SkipTagged           []string
 	IncludeTagged        []string
+	SkipPathPrefixes     []string
 }
 
 func PushCommand(ui Ui, input PushCommandInput) {
@@ -28,6 +29,7 @@ func PushCommand(ui Ui, input PushCommandInput) {
 		HeuristicCfnMatching:                  input.HeuristicCfnMatching,
 		SkipTagged:                            input.SkipTagged,
 		IncludeTagged:                         input.IncludeTagged,
+		SkipPathPrefixes:                      input.SkipPathPrefixes,
 	}
 
 	allDataFromYaml, err := yaml.Load()
