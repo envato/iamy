@@ -12,7 +12,7 @@ FLAGS=-X main.Version=$(VERSION) -s -w
 #  - select the tag version you just created
 #  - Attach the binaries from ./bin/*
 
-release: bin/iamy-linux-amd64 bin/iamy-darwin-amd64 bin/iamy-windows-386.exe bin/iamy-darwin-arm64
+release: bin/iamy-linux-amd64 bin/iamy-darwin-amd64 bin/iamy-windows-386.exe bin/iamy-darwin-arm64 bin/iamy-freebsd-amd64
 
 bin/iamy-darwin-arm64:
 	@mkdir -p bin
@@ -29,6 +29,10 @@ bin/iamy-darwin-amd64:
 bin/iamy-windows-386.exe:
 	@mkdir -p bin
 	GOOS=windows GOARCH=386 go build -o $@ -ldflags="$(FLAGS)" .
+
+bin/iamy-freebsd-amd64:
+	@mkdir -p bin
+	GOOS=freebsd GOARCH=amd64 go build -o $@ -ldflags="$(FLAGS)" .
 
 clean:
 	rm -f bin/*
