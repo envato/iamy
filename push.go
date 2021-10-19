@@ -24,7 +24,7 @@ func PushCommand(ui Ui, input PushCommandInput) {
 		Dir: input.Dir,
 	}
 	aws := iamy.AwsFetcher{
-		SkipFetchingPolicyAndRoleDescriptions: true,
+		SkipFetchingPolicyAndRoleDescriptions: false,
 		Debug:                                 ui.Debug,
 		HeuristicCfnMatching:                  input.HeuristicCfnMatching,
 		SkipTagged:                            input.SkipTagged,
