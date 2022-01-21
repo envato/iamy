@@ -98,8 +98,9 @@ type Policy struct {
 	numberOfVersions     int
 	oldestVersionId      string
 	nondefaultVersionIds []string
-	Description          string          `json:"Description,omitempty"`
-	Policy               *PolicyDocument `json:"Policy"`
+	Description          string            `json:"Description,omitempty"`
+	Policy               *PolicyDocument   `json:"Policy"`
+	Tags                 map[string]string `json:"Tags,omitempty"`
 }
 
 func (p Policy) ResourceType() string {

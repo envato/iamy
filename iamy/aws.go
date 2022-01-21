@@ -31,6 +31,7 @@ type AwsFetcher struct {
 
 	descriptionFetchWaitGroup sync.WaitGroup
 	descriptionFetchError     error
+	policyTagFetchError       error
 }
 
 func (a *AwsFetcher) init() error {
@@ -196,6 +197,16 @@ func (a *AwsFetcher) marshalPolicyDescriptionAsync(policyArn string, target *str
 	}()
 }
 
+func (a *AwsFetcher) fetchPolicyTags(policyArn string, tags *map[string]string) {
+	log.Println("Fetching tags for", policyArn)
+
+	var err error
+	*tags, err = a.iam.getPolicyTags(policyArn)
+	if err != nil {
+		a.policyTagFetchError = err
+	}
+}
+
 func (a *AwsFetcher) marshalRoleAsync(roleName string, roleDescription *string, roleMaxSessionDuration *int) {
 	a.descriptionFetchWaitGroup.Add(1)
 	go func() {
@@ -349,6 +360,12 @@ func (a *AwsFetcher) populateIamData(resp *iam.GetAccountAuthorizationDetailsOut
 		if !a.SkipFetchingPolicyAndRoleDescriptions {
 			a.marshalPolicyDescriptionAsync(*policyResp.Arn, &p.Description)
 		}
+                a.fetchPolicyTags(*policyResp.Arn, &p.Tags)
+                // Need to do this _after_ we fetch tags for the Policy
+                if ok, err := a.isSkippableManagedResource(CfnIamPolicy, *policyResp.PolicyName, p.Tags, *policyResp.Path); ok {
+                        log.Printf(err)
+                        continue
+                }
 
 		a.data.addPolicy(&p)
 	}
