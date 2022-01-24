@@ -25,6 +25,18 @@ func (c *iamClient) getPolicyDescription(arn string) (string, error) {
 	return "", err
 }
 
+func (c *iamClient) getPolicyTags(arn string) (map[string]string, error) {
+	resp, err := c.ListPolicyTags(&iam.ListPolicyTagsInput{PolicyArn: &arn})
+	if err == nil && resp.Tags != nil {
+		tags := make(map[string]string)
+		for _, tag := range resp.Tags {
+			tags[*tag.Key] = *tag.Value
+		}
+		return tags, err
+	}
+	return nil, err
+}
+
 func (c *iamClient) getRole(name string) (string, int, error) {
 	resp, err := c.GetRole(&iam.GetRoleInput{RoleName: &name})
 	var sessionDuration int64
