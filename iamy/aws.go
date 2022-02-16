@@ -26,6 +26,7 @@ type AwsFetcher struct {
 	iam     *iamClient
 	s3      *s3Client
 	cfn     *cfnClient
+	tagging *resourceGroupsTaggingAPIClient
 	account *Account
 	data    AccountData
 
@@ -41,6 +42,7 @@ func (a *AwsFetcher) init() error {
 	a.iam = newIamClient(s)
 	a.s3 = newS3Client(s)
 	a.cfn = newCfnClient(s)
+	a.tagging = newResourceGroupsTaggingAPIClient(s)
 
 	if a.account, err = a.getAccount(); err != nil {
 		return err
@@ -334,6 +336,17 @@ func (a *AwsFetcher) populateIamData(resp *iam.GetAccountAuthorizationDetailsOut
 		a.data.addRole(&role)
 	}
 
+	policyArns := make([]*string, 0)
+	for _, policyResp := range resp.Policies {
+		policyArns = append(policyArns, policyResp.Arn)
+	}
+
+	policyTags, err := a.tagging.getMultiplePolicyTags(policyArns)
+	if err != nil {
+		log.Printf("Error: %v", err)
+		return err
+	}
+
 	for _, policyResp := range resp.Policies {
 		if ok, err := a.isSkippableManagedResource(CfnIamPolicy, *policyResp.PolicyName, map[string]string{}, *policyResp.Path); ok {
 			log.Printf(err)
@@ -360,12 +373,16 @@ func (a *AwsFetcher) populateIamData(resp *iam.GetAccountAuthorizationDetailsOut
 		if !a.SkipFetchingPolicyAndRoleDescriptions {
 			a.marshalPolicyDescriptionAsync(*policyResp.Arn, &p.Description)
 		}
-                a.fetchPolicyTags(*policyResp.Arn, &p.Tags)
-                // Need to do this _after_ we fetch tags for the Policy
-                if ok, err := a.isSkippableManagedResource(CfnIamPolicy, *policyResp.PolicyName, p.Tags, *policyResp.Path); ok {
-                        log.Printf(err)
-                        continue
-                }
+		if tags, ok := policyTags[*policyResp.Arn]; ok {
+			p.Tags = tags
+		} else {
+			p.Tags = make(map[string]string)
+		}
+		// Need to do this _after_ we fetch tags for the Policy
+		if ok, err := a.isSkippableManagedResource(CfnIamPolicy, *policyResp.PolicyName, p.Tags, *policyResp.Path); ok {
+			log.Printf(err)
+			continue
+		}
 
 		a.data.addPolicy(&p)
 	}
