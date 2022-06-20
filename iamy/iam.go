@@ -39,6 +39,9 @@ func (c *iamClient) getPolicyTags(arn string) (map[string]string, error) {
 
 func (c *iamClient) getRole(name string) (string, int, error) {
 	resp, err := c.GetRole(&iam.GetRoleInput{RoleName: &name})
+	if err != nil {
+		panic(err)
+	}
 	var sessionDuration int64
 	var description string
 	// 3600 is the default, so let's ignore it
