@@ -3,6 +3,7 @@ package iamy
 import (
 	"fmt"
 	"log"
+	"sort"
 	"strings"
 	"sync"
 
@@ -269,9 +270,15 @@ func (a *AwsFetcher) populateIamData(resp *iam.GetAccountAuthorizationDetailsOut
 		for _, g := range userResp.GroupList {
 			user.Groups = append(user.Groups, *g)
 		}
+                sort.SliceStable(user.Groups, func(i, j int) bool {
+                        return user.Groups[i] < user.Groups[j]
+                })
 		for _, p := range userResp.AttachedManagedPolicies {
 			user.Policies = append(user.Policies, a.account.normalisePolicyArn(*p.PolicyArn))
 		}
+                sort.SliceStable(user.Policies, func(i, j int) bool {
+                        return user.Policies[i] < user.Policies[j]
+                })
 		if err := a.populateInlinePolicies(userResp.UserPolicyList, &user.InlinePolicies); err != nil {
 			return err
 		}
@@ -294,6 +301,9 @@ func (a *AwsFetcher) populateIamData(resp *iam.GetAccountAuthorizationDetailsOut
 		for _, p := range groupResp.AttachedManagedPolicies {
 			group.Policies = append(group.Policies, a.account.normalisePolicyArn(*p.PolicyArn))
 		}
+                sort.SliceStable(group.Policies, func(i, j int) bool {
+                        return group.Policies[i] < group.Policies[j]
+                })
 		if err := a.populateInlinePolicies(groupResp.GroupPolicyList, &group.InlinePolicies); err != nil {
 			return err
 		}
@@ -329,6 +339,9 @@ func (a *AwsFetcher) populateIamData(resp *iam.GetAccountAuthorizationDetailsOut
 		for _, p := range roleResp.AttachedManagedPolicies {
 			role.Policies = append(role.Policies, a.account.normalisePolicyArn(*p.PolicyArn))
 		}
+		sort.SliceStable(role.Policies, func(i, j int) bool {
+			return role.Policies[i] < role.Policies[j]
+		})
 		if err := a.populateInlinePolicies(roleResp.RolePolicyList, &role.InlinePolicies); err != nil {
 			return err
 		}
