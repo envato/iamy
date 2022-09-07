@@ -3,7 +3,7 @@ package iamy
 import (
 	"log"
 
-        "github.com/aws/aws-sdk-go/aws"
+	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/session"
 	"github.com/aws/aws-sdk-go/service/resourcegroupstaggingapi"
 	"github.com/aws/aws-sdk-go/service/resourcegroupstaggingapi/resourcegroupstaggingapiiface"
@@ -14,7 +14,7 @@ type resourceGroupsTaggingAPIClient struct {
 }
 
 func newResourceGroupsTaggingAPIClient(sess *session.Session) *resourceGroupsTaggingAPIClient {
-        // Force us of us-east-1 otherwise tags will not be returned for global resources
+	// Force us of us-east-1 otherwise tags will not be returned for global resources
 	return &resourceGroupsTaggingAPIClient{
 		resourcegroupstaggingapi.New(sess, aws.NewConfig().WithRegion("us-east-1")),
 	}
