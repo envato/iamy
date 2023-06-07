@@ -200,16 +200,6 @@ func (a *AwsFetcher) marshalPolicyDescriptionAsync(policyArn string, target *str
 	}()
 }
 
-func (a *AwsFetcher) fetchPolicyTags(policyArn string, tags *map[string]string) {
-	log.Println("Fetching tags for", policyArn)
-
-	var err error
-	*tags, err = a.iam.getPolicyTags(policyArn)
-	if err != nil {
-		a.policyTagFetchError = err
-	}
-}
-
 func (a *AwsFetcher) fetchInstanceProfileTags(instanceProfileName string, tags *map[string]string) {
 	log.Println("Fetching tags for instance profile ", instanceProfileName)
 
