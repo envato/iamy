@@ -210,6 +210,16 @@ func (a *AwsFetcher) fetchPolicyTags(policyArn string, tags *map[string]string) 
 	}
 }
 
+func (a *AwsFetcher) fetchInstanceProfileTags(instanceProfileName string, tags *map[string]string) {
+	log.Println("Fetching tags for instance profile ", instanceProfileName)
+
+	var err error
+	*tags, err = a.iam.getInstanceProfileTags(instanceProfileName)
+	if err != nil {
+		a.policyTagFetchError = err
+	}
+}
+
 func (a *AwsFetcher) marshalRoleAsync(roleName string, roleDescription *string, roleMaxSessionDuration *int) {
 	a.descriptionFetchWaitGroup.Add(1)
 	go func() {
@@ -230,7 +240,10 @@ func (a *AwsFetcher) marshalRoleAsync(roleName string, roleDescription *string, 
 
 func (a *AwsFetcher) populateInstanceProfileData(resp *iam.ListInstanceProfilesOutput) error {
 	for _, profileResp := range resp.InstanceProfiles {
-		if ok, err := a.isSkippableManagedResource(CfnInstanceProfile, *profileResp.InstanceProfileName, map[string]string{}, *profileResp.Path); ok {
+		tags := make(map[string]string)
+		a.fetchInstanceProfileTags(*profileResp.InstanceProfileName, &tags)
+
+		if ok, err := a.isSkippableManagedResource(CfnInstanceProfile, *profileResp.InstanceProfileName, tags, *profileResp.Path); ok {
 			log.Printf(err)
 			continue
 		}
@@ -243,6 +256,7 @@ func (a *AwsFetcher) populateInstanceProfileData(resp *iam.ListInstanceProfilesO
 			role := *(roleResp.RoleName)
 			profile.Roles = append(profile.Roles, role)
 		}
+		profile.Tags = tags
 		a.data.InstanceProfiles = append(a.data.InstanceProfiles, &profile)
 	}
 	return nil

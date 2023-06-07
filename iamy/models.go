@@ -119,6 +119,7 @@ type Role struct {
 type InstanceProfile struct {
 	iamService `json:"-"`
 	Roles      []string `json:"Roles,omitempty"`
+	Tags       map[string]string `json:"Tags,omitempty"`
 }
 
 func (ip InstanceProfile) ResourceType() string {
