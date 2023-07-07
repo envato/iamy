@@ -37,6 +37,18 @@ func (c *iamClient) getPolicyTags(arn string) (map[string]string, error) {
 	return nil, err
 }
 
+func (c *iamClient) getInstanceProfileTags(name string) (map[string]string, error) {
+	resp, err := c.ListInstanceProfileTags(&iam.ListInstanceProfileTagsInput{InstanceProfileName: &name})
+	if err == nil && resp.Tags != nil {
+		tags := make(map[string]string)
+		for _, tag := range resp.Tags {
+			tags[*tag.Key] = *tag.Value
+		}
+		return tags, err
+	}
+	return nil, err
+}
+
 func (c *iamClient) getRole(name string) (string, int, error) {
 	resp, err := c.GetRole(&iam.GetRoleInput{RoleName: &name})
 	if err != nil {
