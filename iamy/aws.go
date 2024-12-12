@@ -228,6 +228,14 @@ func (a *AwsFetcher) marshalRoleAsync(roleName string, roleDescription *string, 
 	}()
 }
 
+func dumpTags(label string, tags map[string]string) {
+	log.Printf("Tags for %s:\n", label)
+	for key, value := range tags {
+		log.Printf("%s: %s\n", key, value)
+	}
+}
+
+
 func (a *AwsFetcher) populateInstanceProfileData(resp *iam.ListInstanceProfilesOutput) error {
 	for _, profileResp := range resp.InstanceProfiles {
 		tags := make(map[string]string)
@@ -469,18 +477,22 @@ func (a *AwsFetcher) getAccount() (*Account, error) {
 // Returns a boolean of whether it can be skipped and a string of the
 // reasoning why it was skipped.
 
+
 func (a *AwsFetcher) isSkippableManagedResource(cfnType CfnResourceType, resourceIdentifier string, tags map[string]string, resourcePath string) (bool, string) {
+	log.Printf("Checking if %s is skippable:  Tag dump\n",resourceIdentifier)
+        dumpTags(resourceIdentifier, tags)
 	if len(a.IncludeTagged) > 0 {
 		for _, tag := range a.IncludeTagged {
 			if _, ok := tags[tag]; ok {
+				log.Printf("Not skippable - resource %s tagged with %s\n",  resourceIdentifier, tag)
 				return false, ""
 			}
 		}
 	}
 
 	for _, tag := range a.SkipTagged {
-		if stackName, ok := tags[tag]; ok {
-			return true, fmt.Sprintf("Skipping resource %s tagged with %s in stack %s", resourceIdentifier, tag, stackName)
+		if _, ok := tags[tag]; ok {
+			return true, fmt.Sprintf("Skipping resource %s tagged with %s", resourceIdentifier, tag)
 		}
 	}
 
@@ -491,12 +503,13 @@ func (a *AwsFetcher) isSkippableManagedResource(cfnType CfnResourceType, resourc
 	}
 
 	if a.cfn.IsManagedResource(cfnType, resourceIdentifier) {
-		return true, fmt.Sprintf("CloudFormation generated resource %s", resourceIdentifier)
+		return true, fmt.Sprintf("Skipping CloudFormation generated resource %s", resourceIdentifier)
 	}
 
 	if strings.Contains(resourceIdentifier, "AWSServiceRole") || strings.Contains(resourceIdentifier, "aws-service-role") {
-		return true, fmt.Sprintf("AWS Service role generated resource %s", resourceIdentifier)
+		return true, fmt.Sprintf("Skipping AWS Service role generated resource %s", resourceIdentifier)
 	}
 
+	log.Printf("Not skippable\n")
 	return false, ""
 }
