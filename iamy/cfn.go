@@ -13,7 +13,7 @@ import (
 	"github.com/aws/aws-sdk-go/service/cloudformation/cloudformationiface"
 )
 
-var cfnResourceRegexp = regexp.MustCompile(`-[A-Z0-9]{10,20}$`)
+var cfnResourceRegexp = regexp.MustCompile(`-[A-Za-z0-9]{10,20}$`)
 
 type CfnResourceType string
 

@@ -30,6 +30,9 @@ func TestCfnMangedResources(t *testing.T) {
 		if !cfn.IsManagedResource(CfnIamPolicy, "foobar-ABCDEFGH1234567") {
 			t.Fatal("names with id suffix are managed")
 		}
+		if !cfn.IsManagedResource(CfnIamPolicy, "foobar-ABCDEFabcde12345") {
+			t.Fatal("names with id suffix are managed")
+		}
 
 		if cfn.IsManagedResource(CfnIamPolicy, "foobar-abcdefgh1234567") {
 			t.Fatal("names with suffix containing only lowercase letters are not managed")
