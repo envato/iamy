@@ -6,6 +6,7 @@ import (
 	"log"
 	"os"
 	"path/filepath"
+	"strings"
 
 	"gopkg.in/alecthomas/kingpin.v2"
 )
@@ -42,6 +43,7 @@ func main() {
 	var (
 		debug            = kingpin.Flag("debug", "Show debugging output").Bool()
 		skipCfnTagged    = kingpin.Flag("skip-cfn-tagged", fmt.Sprintf("Shorthand for --skip-tagged %s", cloudformationStackNameTag)).Bool()
+		skipTaggedValues = kingpin.Flag("skip-tagged-value", "Skips resources tagged with an exact KEY=VALUE pair; repeat for multiple values").Strings()
 		skipTagged       = kingpin.Flag("skip-tagged", "Skips IAM entities (or buckets associated with bucket policies) tagged with a given tag").Strings()
 		includeTagged    = kingpin.Flag("include-tagged", "Includes IAM entities (or buckets associated with bucket policies) tagged with a given tag").Strings()
 		skipPathPrefixes = kingpin.Flag("skip-path-prefix", fmt.Sprintf("Skips IAM entities that have a path starting with the supplied prefix, repeat flag for multiple prefixes")).Strings()
@@ -82,6 +84,11 @@ func main() {
 		panic(err)
 	}
 
+	if err := validateSkipTaggedValues(*skipTaggedValues); err != nil {
+		ui.Fatal(err)
+		return
+	}
+
 	if *debug {
 		ui.Debug = log.New(os.Stderr, "DEBUG ", log.LstdFlags)
 		log.SetFlags(0)
@@ -107,6 +114,7 @@ func main() {
 			Dir:                  *pushDir,
 			HeuristicCfnMatching: !*lookupCfn,
 			SkipTagged:           *skipTagged,
+			SkipTaggedValues:     *skipTaggedValues,
 			IncludeTagged:        *includeTagged,
 			SkipPathPrefixes:     *skipPathPrefixes,
 		})
@@ -117,6 +125,7 @@ func main() {
 			CanDelete:            *pullCanDelete,
 			HeuristicCfnMatching: !*lookupCfn,
 			SkipTagged:           *skipTagged,
+			SkipTaggedValues:     *skipTaggedValues,
 			IncludeTagged:        *includeTagged,
 			SkipPathPrefixes:     *skipPathPrefixes,
 		})
@@ -139,4 +148,15 @@ func init() {
 		panic(err)
 	}
 	defaultDir = filepath.Clean(dir)
+}
+
+// validateSkipTaggedValues rejects malformed filters before contacting AWS.
+func validateSkipTaggedValues(filters []string) error {
+	for _, filter := range filters {
+		parts := strings.SplitN(filter, "=", 2)
+		if len(parts) != 2 || parts[0] == "" {
+			return fmt.Errorf("invalid --skip-tagged-value %q: expected KEY=VALUE with a non-empty key", filter)
+		}
+	}
+	return nil
 }

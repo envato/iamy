@@ -11,6 +11,7 @@ type PullCommandInput struct {
 	CanDelete            bool
 	HeuristicCfnMatching bool
 	SkipTagged           []string
+	SkipTaggedValues     []string
 	IncludeTagged        []string
 	SkipPathPrefixes     []string
 }
@@ -20,6 +21,7 @@ func PullCommand(ui Ui, input PullCommandInput) {
 		Debug:                ui.Debug,
 		HeuristicCfnMatching: input.HeuristicCfnMatching,
 		SkipTagged:           input.SkipTagged,
+		SkipTaggedValues:     input.SkipTaggedValues,
 		IncludeTagged:        input.IncludeTagged,
 		SkipPathPrefixes:     input.SkipPathPrefixes,
 	}

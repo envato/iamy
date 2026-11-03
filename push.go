@@ -15,6 +15,7 @@ type PushCommandInput struct {
 	Dir                  string
 	HeuristicCfnMatching bool
 	SkipTagged           []string
+	SkipTaggedValues     []string
 	IncludeTagged        []string
 	SkipPathPrefixes     []string
 }
@@ -28,6 +29,7 @@ func PushCommand(ui Ui, input PushCommandInput) {
 		Debug:                                 ui.Debug,
 		HeuristicCfnMatching:                  input.HeuristicCfnMatching,
 		SkipTagged:                            input.SkipTagged,
+		SkipTaggedValues:                      input.SkipTaggedValues,
 		IncludeTagged:                         input.IncludeTagged,
 		SkipPathPrefixes:                      input.SkipPathPrefixes,
 	}
