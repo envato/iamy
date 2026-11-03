@@ -19,6 +19,7 @@ type AwsFetcher struct {
 	SkipFetchingPolicyAndRoleDescriptions bool
 	HeuristicCfnMatching                  bool
 	SkipTagged                            []string
+	SkipTaggedValues                      []string
 	IncludeTagged                         []string
 	SkipPathPrefixes                      []string
 
@@ -481,6 +482,15 @@ func (a *AwsFetcher) isSkippableManagedResource(cfnType CfnResourceType, resourc
 	for _, tag := range a.SkipTagged {
 		if stackName, ok := tags[tag]; ok {
 			return true, fmt.Sprintf("Skipping resource %s tagged with %s in stack %s", resourceIdentifier, tag, stackName)
+		}
+	}
+
+	for _, filter := range a.SkipTaggedValues {
+		parts := strings.SplitN(filter, "=", 2)
+		if len(parts) == 2 && parts[0] != "" {
+			if value, ok := tags[parts[0]]; ok && value == parts[1] {
+				return true, fmt.Sprintf("Skipping resource %s tagged with %s", resourceIdentifier, filter)
+			}
 		}
 	}
 

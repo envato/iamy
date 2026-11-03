@@ -86,6 +86,27 @@ Exec all aws commands? (y/N) y
 > aws iam attach-user-policy --user-name billy.blogs --policy-arn arn:aws:iam::aws:policy/ReadOnly
 ```
 
+## Excluding resources by tag value
+
+`--skip-tagged` matches a tag key regardless of its value. Use the repeatable
+`--skip-tagged-value=KEY=VALUE` flag to exclude only exact, case-sensitive values:
+
+```text
+--skip-tagged-value=DeployedBy=Terraform/Ship-SI
+--skip-tagged-value=DeployedBy=Terraform/Ship
+--skip-tagged-value=DeployedBy=ship
+```
+
+These lines can also go in `.iamy-flags`. Any matching filter excludes the
+resource from the AWS snapshot used by both pull and push. Existing
+`--include-tagged` matches take precedence over exclusions. Empty tag values
+are supported (`KEY=`); missing keys do not match. Values may contain `=`.
+
+If excluded resources are already tracked locally, preview `iamy --dry-run pull
+--delete`, then run `iamy pull --delete` and review the local YAML removals before
+running `iamy --dry-run push`. The exclusion does not remove existing local files
+on its own. `pull --delete` removes local files, not AWS resources.
+
 ## Accurate cloudformation matching
 
 By default, iamy will use a simple heuristic (does it end with an ID, eg -ABCDEF1234) to determine if a given resource is managed by cloudformation.

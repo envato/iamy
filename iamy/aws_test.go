@@ -212,3 +212,39 @@ func TestSkippableIAMRoleResource_WithNoSkipTags(t *testing.T) {
 		t.Error("Expected to not skip role with CFN tags and SkipTagged: []string{}")
 	}
 }
+
+func TestSkipTaggedValues(t *testing.T) {
+	filters := []string{"DeployedBy=Terraform/Ship-SI", "DeployedBy=Terraform/Ship", "DeployedBy=ship", "Empty=", "Other=a=b"}
+	tests := []struct {
+		name string
+		tags map[string]string
+		want bool
+	}{
+		{"SI", map[string]string{"DeployedBy": "Terraform/Ship-SI"}, true},
+		{"Ship", map[string]string{"DeployedBy": "Terraform/Ship"}, true},
+		{"legacy Ship", map[string]string{"DeployedBy": "ship"}, true},
+		{"other Terraform", map[string]string{"DeployedBy": "Terraform"}, false},
+		{"Terraform Cloud", map[string]string{"DeployedBy": "Terraform Cloud"}, false},
+		{"case sensitive", map[string]string{"DeployedBy": "Ship"}, false},
+		{"no prefix matching", map[string]string{"DeployedBy": "Terraform/Ship-other"}, false},
+		{"missing key", map[string]string{}, false},
+		{"empty value", map[string]string{"Empty": ""}, true},
+		{"equals in value", map[string]string{"Other": "a=b"}, true},
+		{"include overrides value exclusion", map[string]string{"DeployedBy": "Terraform/Ship", includeTestTag: "true"}, false},
+		{"existing key exclusion", map[string]string{"iamy-ignore": "true"}, true},
+	}
+	for _, kind := range []CfnResourceType{CfnIamRole, CfnIamPolicy, CfnIamUser, CfnS3Bucket} {
+		for _, tt := range tests {
+			t.Run(string(kind)+"/"+tt.name, func(t *testing.T) {
+				f := AwsFetcher{cfn: &cfnClient{}, SkipTagged: []string{"iamy-ignore"}, SkipTaggedValues: filters, IncludeTagged: []string{includeTestTag}}
+				got, reason := f.isSkippableManagedResource(kind, "example", tt.tags, "/")
+				if got != tt.want {
+					t.Errorf("skip = %v, want %v", got, tt.want)
+				}
+				if (reason != "") != tt.want {
+					t.Errorf("unexpected reason: %q", reason)
+				}
+			})
+		}
+	}
+}
